@@ -1,9 +1,9 @@
 let board = ["", "", "", "", "", "", "", "", ""];
 let currentPlayer = "X";
 let gameActive = true;
-
 const status = document.getElementById("status");
 const cells = document.querySelectorAll(".cell");
+
 cells.forEach(cell => {
   cell.addEventListener("click", handleClick);
 });
@@ -11,47 +11,92 @@ cells.forEach(cell => {
 function handleClick(e) {
   const cell = e.target;
   const index = cell.dataset.index;
-
-  if (!gameActive) return;        // 1. check if game is over
-  if (board[index] !== "") return; // 2. check if cell is filled
-
-  board[index] = currentPlayer;   // 3. place the mark
+  if (!gameActive) return;
+  if (board[index] !== "") return;
+  board[index] = currentPlayer;
   cell.textContent = currentPlayer;
-
-  checkWinner();                   // 4. check for winner
-
-  if (currentPlayer === "X") {    // 5. switch player
+  checkWinner();
+  if (gameActive && currentPlayer === "X") {
     currentPlayer = "O";
-  } else {
+    const move = bestMove();
+    board[move] = "O";
+    cells[move].textContent = "O";
+    checkWinner();
     currentPlayer = "X";
   }
 }
+
 const winningCombos = [
-  [0, 1, 2], // top row
-  [3, 4, 5], // middle row
-  [6, 7, 8], // bottom row
-  [0, 3, 6], // left column
-  [1, 4, 7], // middle column
-  [2, 5, 8], // right column
-  [0, 4, 8], // diagonal
-  [2, 4, 6], // diagonal
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6],
 ];
 
 function checkWinner() {
   for (let i = 0; i < winningCombos.length; i++) {
     const [a, b, c] = winningCombos[i];
-
-    if (board[a] === board[b] && board[b] === board[c] && board[a] !== "") {
+    if (board[a] && board[a] === board[b] && board[b] === board[c]) {
       status.textContent = board[a] + " wins!";
       gameActive = false;
       return;
     }
   }
-
-  // check draw
   if (!board.includes("")) {
     status.textContent = "It's a draw!";
     gameActive = false;
   }
 }
 
+function minimax(newBoard, isMaximizing) {
+  for (let i = 0; i < winningCombos.length; i++) {
+    const [a, b, c] = winningCombos[i];
+    if (newBoard[a] && newBoard[a] === newBoard[b] && newBoard[b] === newBoard[c]) {
+      if (newBoard[a] === "O") return 10;
+      if (newBoard[a] === "X") return -10;
+    }
+  }
+  if (!newBoard.includes("")) return 0;
+  if (isMaximizing) {
+    let best = -Infinity;
+    for (let i = 0; i < 9; i++) {
+      if (newBoard[i] === "") {
+        newBoard[i] = "O";
+        best = Math.max(best, minimax(newBoard, false));
+        newBoard[i] = "";
+      }
+    }
+    return best;
+  } else {
+    let best = Infinity;
+    for (let i = 0; i < 9; i++) {
+      if (newBoard[i] === "") {
+        newBoard[i] = "X";
+        best = Math.min(best, minimax(newBoard, true));
+        newBoard[i] = "";
+      }
+    }
+    return best;
+  }
+}
+
+function bestMove() {
+  let best = -Infinity;
+  let move = -1;
+  for (let i = 0; i < 9; i++) {
+    if (board[i] === "") {
+      board[i] = "O";
+      let score = minimax(board, false);
+      board[i] = "";
+      if (score > best) {
+        best = score;
+        move = i;
+      }
+    }
+  }
+  return move;
+}
