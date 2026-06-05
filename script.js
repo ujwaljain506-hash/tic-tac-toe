@@ -100,3 +100,14 @@ function bestMove() {
   }
   return move;
 }
+function restart() {
+  board = ["", "", "", "", "", "", "", "", ""];
+  currentPlayer = "X";
+  gameActive = true;
+  status.textContent = "Your turn";
+  cells.forEach(cell => {
+    cell.textContent = "";
+  });
+}
+
+document.getElementById("restart").addEventListener("click", restart);
